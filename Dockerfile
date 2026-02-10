@@ -1,10 +1,29 @@
-# Build stage (optional, if building on Render)
-FROM maven:3.8.5-openjdk-17 AS build
-COPY . .
+# Build stage
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+WORKDIR /app
+
+# Copy pom.xml first for better layer caching
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source code
+COPY src ./src
+
+# Build the application (skip tests for faster builds)
 RUN mvn clean package -DskipTests
 
-# Package stage
-FROM eclipse-temurin:17-jdk
-COPY --from=build /target/demo-0.0.1-SNAPSHOT.jar app.jar
+# Runtime stage
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+
+# Copy the built JAR from build stage
+COPY --from=build /app/target/private-0.0.1-SNAPSHOT.jar app.jar
+
+# Expose the port your app runs on
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+
+# Set JVM options for optimal performance
+ENV JAVA_OPTS="-Xmx512m -Xms256m"
+
+# Run the application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
