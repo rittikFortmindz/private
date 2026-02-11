@@ -1,8 +1,9 @@
-server:
-  port: 8080
-
 spring:
   application:
     name: Private
   mongodb:
-    uri: mongodb+srv://rittik2804_db_user:p5t1qNar076pPZm5@cluster0.wbyrqil.mongodb.net/micro_service?appName=Cluster0
+    uri: ${MONGO_URI}
+
+    
+server:
+  port: ${PORT:8080}
